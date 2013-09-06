@@ -123,7 +123,7 @@ public class GitignoreListPanel extends JPanel {
     })
     public DialogDescriptor showDialog() throws IOException {
         if (!isConnectedNetwork) {
-            throw new IOException(Bundle.GitignoreListPanel_error_message());
+            throw new IOException(Bundle.GitignoreListPanel_network_error());
         }
         DialogDescriptor descriptor = new DialogDescriptor(this, Bundle.GitignoreListPanel_dialog_title());
         Dialog dialog = DialogDisplayer.getDefault().createDialog(descriptor);
