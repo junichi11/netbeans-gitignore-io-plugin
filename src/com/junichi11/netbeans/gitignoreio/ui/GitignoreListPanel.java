@@ -99,6 +99,7 @@ public class GitignoreListPanel extends JPanel {
             }
             availableList.setModel(model);
         }
+        normalRadioButton.setSelected(true);
     }
 
     public String getGitignoreContent() throws MalformedURLException, IOException {
@@ -115,6 +116,26 @@ public class GitignoreListPanel extends JPanel {
 
     public void setGitignores(String ignores) {
         gitignoresTextField.setText(ignores);
+    }
+
+    public boolean isNormal() {
+        return normalRadioButton.isSelected();
+    }
+
+    public boolean isOverwrite() {
+        return overwriteRadioButton.isSelected();
+    }
+
+    public boolean isPostscript() {
+        return postscriptRadioButton.isSelected();
+    }
+
+    public void setEnabledOverwrite(boolean isEnabled) {
+        overwriteRadioButton.setEnabled(isEnabled);
+    }
+
+    public void setEnabledPostscript(boolean isEnabled) {
+        postscriptRadioButton.setEnabled(isEnabled);
     }
 
     @NbBundle.Messages({
@@ -176,6 +197,7 @@ public class GitignoreListPanel extends JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        writeOptionButtonGroup = new javax.swing.ButtonGroup();
         availableListLabel = new javax.swing.JLabel();
         availableListScrollPane = new javax.swing.JScrollPane();
         availableList = new javax.swing.JList();
@@ -183,6 +205,9 @@ public class GitignoreListPanel extends JPanel {
         saveAsDefaultButton = new javax.swing.JButton();
         loadDefaultButton = new javax.swing.JButton();
         resetButton = new javax.swing.JButton();
+        normalRadioButton = new javax.swing.JRadioButton();
+        overwriteRadioButton = new javax.swing.JRadioButton();
+        postscriptRadioButton = new javax.swing.JRadioButton();
 
         org.openide.awt.Mnemonics.setLocalizedText(availableListLabel, org.openide.util.NbBundle.getMessage(GitignoreListPanel.class, "GitignoreListPanel.availableListLabel.text")); // NOI18N
 
@@ -222,6 +247,15 @@ public class GitignoreListPanel extends JPanel {
             }
         });
 
+        writeOptionButtonGroup.add(normalRadioButton);
+        org.openide.awt.Mnemonics.setLocalizedText(normalRadioButton, org.openide.util.NbBundle.getMessage(GitignoreListPanel.class, "GitignoreListPanel.normalRadioButton.text")); // NOI18N
+
+        writeOptionButtonGroup.add(overwriteRadioButton);
+        org.openide.awt.Mnemonics.setLocalizedText(overwriteRadioButton, org.openide.util.NbBundle.getMessage(GitignoreListPanel.class, "GitignoreListPanel.overwriteRadioButton.text")); // NOI18N
+
+        writeOptionButtonGroup.add(postscriptRadioButton);
+        org.openide.awt.Mnemonics.setLocalizedText(postscriptRadioButton, org.openide.util.NbBundle.getMessage(GitignoreListPanel.class, "GitignoreListPanel.postscriptRadioButton.text")); // NOI18N
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -238,7 +272,14 @@ public class GitignoreListPanel extends JPanel {
                         .addComponent(loadDefaultButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(saveAsDefaultButton))
-                    .addComponent(gitignoresTextField))
+                    .addComponent(gitignoresTextField)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(normalRadioButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(overwriteRadioButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(postscriptRadioButton)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -251,9 +292,14 @@ public class GitignoreListPanel extends JPanel {
                     .addComponent(loadDefaultButton)
                     .addComponent(resetButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(availableListScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 206, Short.MAX_VALUE)
+                .addComponent(availableListScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 176, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(gitignoresTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(normalRadioButton)
+                    .addComponent(overwriteRadioButton)
+                    .addComponent(postscriptRadioButton))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -299,13 +345,18 @@ public class GitignoreListPanel extends JPanel {
     private void resetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetButtonActionPerformed
         setGitignores(""); // NOI18N
     }//GEN-LAST:event_resetButtonActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JList availableList;
     private javax.swing.JLabel availableListLabel;
     private javax.swing.JScrollPane availableListScrollPane;
     private javax.swing.JTextField gitignoresTextField;
     private javax.swing.JButton loadDefaultButton;
+    private javax.swing.JRadioButton normalRadioButton;
+    private javax.swing.JRadioButton overwriteRadioButton;
+    private javax.swing.JRadioButton postscriptRadioButton;
     private javax.swing.JButton resetButton;
     private javax.swing.JButton saveAsDefaultButton;
+    private javax.swing.ButtonGroup writeOptionButtonGroup;
     // End of variables declaration//GEN-END:variables
 }
