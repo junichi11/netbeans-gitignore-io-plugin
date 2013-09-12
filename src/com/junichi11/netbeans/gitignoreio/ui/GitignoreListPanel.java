@@ -148,8 +148,8 @@ public class GitignoreListPanel extends JPanel {
         }
         DialogDescriptor descriptor = new DialogDescriptor(this, Bundle.GitignoreListPanel_dialog_title());
         Dialog dialog = DialogDisplayer.getDefault().createDialog(descriptor);
+        dialog.pack();
         dialog.setVisible(true);
-        dialog.dispose();
         return descriptor;
     }
 
@@ -345,7 +345,6 @@ public class GitignoreListPanel extends JPanel {
     private void resetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetButtonActionPerformed
         setGitignores(""); // NOI18N
     }//GEN-LAST:event_resetButtonActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JList availableList;
     private javax.swing.JLabel availableListLabel;
