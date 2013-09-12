@@ -2,6 +2,10 @@
 
 Support for gitignore.io. This plugin generates .gitignore file to your project node.
 
+## Plugin Portal (Download)
+
+- http://plugins.netbeans.org/plugin/50356/gitignore-io
+
 ## What's gitignore.io?
 
 - http://gitignore.io
@@ -22,6 +26,11 @@ Warning dialog is shown with the following cases:
 
 - .gitignore already exists
 - Isn't connected to the internet
+
+## Issues
+
+If you hava some problems, please submit them to the github issue tracker.
+(Please don't submit them to NetBeans bugzilla.)
 
 ## License
 
