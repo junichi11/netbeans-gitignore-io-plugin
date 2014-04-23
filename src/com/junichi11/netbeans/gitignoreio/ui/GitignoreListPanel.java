@@ -50,10 +50,14 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import org.openide.DialogDescriptor;
 import org.openide.DialogDisplayer;
 import org.openide.util.NbBundle;
@@ -68,6 +72,7 @@ public class GitignoreListPanel extends JPanel {
     private static final String GITIGNORE_API = "http://gitignore.io/api/"; // NOI18N
     private static final String GITIGNORE_API_LIST = GITIGNORE_API + "list"; // NOI18N
     private static final String UTF8 = "UTF-8"; // NOI18N
+    private static List<String> GITIGNORES;
     private static final GitignoreListPanel INSTANCE = new GitignoreListPanel();
     private boolean isConnectedNetwork = true;
 
@@ -89,17 +94,53 @@ public class GitignoreListPanel extends JPanel {
     }
 
     private void init() {
-        String gitignoreList = getAvailableGitignoreList();
-        if (gitignoreList != null) {
-            String[] gitignores = splitGitignores(gitignoreList);
-            Arrays.sort(gitignores);
-            DefaultListModel model = new DefaultListModel();
-            for (int i = 0; i < gitignores.length; i++) {
-                model.add(i, gitignores[i].trim());
-            }
-            availableList.setModel(model);
-        }
+        DefaultListModel<String> model = new DefaultListModel<String>();
+        availableList.setModel(model);
+        addGitignores(""); // NOI18N
         normalRadioButton.setSelected(true);
+
+        // add listener
+        filterTextField.getDocument().addDocumentListener(new DocumentListener() {
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                processUpdate();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                processUpdate();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                processUpdate();
+            }
+
+            private void processUpdate() {
+                String text = filterTextField.getText();
+                addGitignores(text);
+            }
+        });
+    }
+
+    private void addGitignores(String filter) {
+        if (filter == null) {
+            return;
+        }
+        DefaultListModel<String> model = (DefaultListModel<String>) availableList.getModel();
+        model.clear();
+
+        filter = filter.replaceAll("\\s+", " "); // NOI18N
+        String[] filters = filter.split(" "); // NOI18N
+        for (String gitignore : getAvailableGitignores()) {
+            for (String f : filters) {
+                if (gitignore.contains(f)) {
+                    model.addElement(gitignore);
+                }
+            }
+        }
+        availableList.setModel(model);
     }
 
     public String getGitignoreContent() throws MalformedURLException, IOException {
@@ -153,7 +194,20 @@ public class GitignoreListPanel extends JPanel {
         return descriptor;
     }
 
-    private String getAvailableGitignoreList() {
+    private synchronized List<String> getAvailableGitignores() {
+        if (GITIGNORES == null) {
+            GITIGNORES = new ArrayList<String>();
+            String gitignoreList = getAvailableGitignoresText();
+            if (gitignoreList != null) {
+                String[] gitignores = splitGitignores(gitignoreList);
+                Arrays.sort(gitignores);
+                GITIGNORES.addAll(Arrays.asList(gitignores));
+            }
+        }
+        return GITIGNORES;
+    }
+
+    private String getAvailableGitignoresText() {
         String list = null;
         try {
             URL url = new URL(GITIGNORE_API_LIST);
@@ -200,7 +254,7 @@ public class GitignoreListPanel extends JPanel {
         writeOptionButtonGroup = new javax.swing.ButtonGroup();
         availableListLabel = new javax.swing.JLabel();
         availableListScrollPane = new javax.swing.JScrollPane();
-        availableList = new javax.swing.JList();
+        availableList = new javax.swing.JList<String>();
         gitignoresTextField = new javax.swing.JTextField();
         saveAsDefaultButton = new javax.swing.JButton();
         loadDefaultButton = new javax.swing.JButton();
@@ -208,6 +262,8 @@ public class GitignoreListPanel extends JPanel {
         normalRadioButton = new javax.swing.JRadioButton();
         overwriteRadioButton = new javax.swing.JRadioButton();
         postscriptRadioButton = new javax.swing.JRadioButton();
+        filterTextField = new javax.swing.JTextField();
+        filterLabel = new javax.swing.JLabel();
 
         org.openide.awt.Mnemonics.setLocalizedText(availableListLabel, org.openide.util.NbBundle.getMessage(GitignoreListPanel.class, "GitignoreListPanel.availableListLabel.text")); // NOI18N
 
@@ -256,6 +312,10 @@ public class GitignoreListPanel extends JPanel {
         writeOptionButtonGroup.add(postscriptRadioButton);
         org.openide.awt.Mnemonics.setLocalizedText(postscriptRadioButton, org.openide.util.NbBundle.getMessage(GitignoreListPanel.class, "GitignoreListPanel.postscriptRadioButton.text")); // NOI18N
 
+        filterTextField.setText(org.openide.util.NbBundle.getMessage(GitignoreListPanel.class, "GitignoreListPanel.filterTextField.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(filterLabel, org.openide.util.NbBundle.getMessage(GitignoreListPanel.class, "GitignoreListPanel.filterLabel.text")); // NOI18N
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -279,7 +339,11 @@ public class GitignoreListPanel extends JPanel {
                         .addComponent(overwriteRadioButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(postscriptRadioButton)
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(filterLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(filterTextField)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -292,7 +356,11 @@ public class GitignoreListPanel extends JPanel {
                     .addComponent(loadDefaultButton)
                     .addComponent(resetButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(availableListScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 176, Short.MAX_VALUE)
+                .addComponent(availableListScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 143, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(filterTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(filterLabel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(gitignoresTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -326,7 +394,13 @@ public class GitignoreListPanel extends JPanel {
     }//GEN-LAST:event_saveAsDefaultButtonActionPerformed
 
     private void availableListMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_availableListMouseReleased
-        JList list = (JList) evt.getSource();
+        Object source = evt.getSource();
+        JList<?> list;
+        if (source instanceof JList) {
+            list = (JList<?>) source;
+        } else {
+            return;
+        }
         String selectedValue = (String) list.getSelectedValue();
         String gitignores = getGitignores();
         String[] items = gitignores.split(","); // NOI18N
@@ -346,9 +420,11 @@ public class GitignoreListPanel extends JPanel {
         setGitignores(""); // NOI18N
     }//GEN-LAST:event_resetButtonActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JList availableList;
+    private javax.swing.JList<String> availableList;
     private javax.swing.JLabel availableListLabel;
     private javax.swing.JScrollPane availableListScrollPane;
+    private javax.swing.JLabel filterLabel;
+    private javax.swing.JTextField filterTextField;
     private javax.swing.JTextField gitignoresTextField;
     private javax.swing.JButton loadDefaultButton;
     private javax.swing.JRadioButton normalRadioButton;
