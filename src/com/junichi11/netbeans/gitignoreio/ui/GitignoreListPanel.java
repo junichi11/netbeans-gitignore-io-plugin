@@ -94,7 +94,7 @@ public class GitignoreListPanel extends JPanel {
     }
 
     private void init() {
-        DefaultListModel model = new DefaultListModel();
+        DefaultListModel<String> model = new DefaultListModel<String>();
         availableList.setModel(model);
         addGitignores(""); // NOI18N
         normalRadioButton.setSelected(true);
@@ -254,7 +254,7 @@ public class GitignoreListPanel extends JPanel {
         writeOptionButtonGroup = new javax.swing.ButtonGroup();
         availableListLabel = new javax.swing.JLabel();
         availableListScrollPane = new javax.swing.JScrollPane();
-        availableList = new javax.swing.JList();
+        availableList = new javax.swing.JList<String>();
         gitignoresTextField = new javax.swing.JTextField();
         saveAsDefaultButton = new javax.swing.JButton();
         loadDefaultButton = new javax.swing.JButton();
@@ -394,7 +394,13 @@ public class GitignoreListPanel extends JPanel {
     }//GEN-LAST:event_saveAsDefaultButtonActionPerformed
 
     private void availableListMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_availableListMouseReleased
-        JList list = (JList) evt.getSource();
+        Object source = evt.getSource();
+        JList<?> list;
+        if (source instanceof JList) {
+            list = (JList<?>) source;
+        } else {
+            return;
+        }
         String selectedValue = (String) list.getSelectedValue();
         String gitignores = getGitignores();
         String[] items = gitignores.split(","); // NOI18N
@@ -414,7 +420,7 @@ public class GitignoreListPanel extends JPanel {
         setGitignores(""); // NOI18N
     }//GEN-LAST:event_resetButtonActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JList availableList;
+    private javax.swing.JList<String> availableList;
     private javax.swing.JLabel availableListLabel;
     private javax.swing.JScrollPane availableListScrollPane;
     private javax.swing.JLabel filterLabel;
