@@ -69,7 +69,7 @@ import org.openide.util.NbBundle;
 public class GitignoreListPanel extends JPanel {
 
     private static final long serialVersionUID = -5481811228115109055L;
-    private static final String GITIGNORE_API = "http://gitignore.io/api/"; // NOI18N
+    private static final String GITIGNORE_API = "https://www.gitignore.io/api/"; // NOI18N
     private static final String GITIGNORE_API_LIST = GITIGNORE_API + "list"; // NOI18N
     private static final String UTF8 = "UTF-8"; // NOI18N
     private static List<String> GITIGNORES;
