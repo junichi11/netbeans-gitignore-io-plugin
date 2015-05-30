@@ -100,6 +100,7 @@ public final class GenerateGitIgnoreAction implements ActionListener {
         FileObject projectDirectory = context.getProjectDirectory();
         gitignoreFile = new File(FileUtil.toFile(projectDirectory), GITIGNORE_NAME);
         final boolean isEnabled = gitignoreFile.exists();
+        final String projectDirectoryPath = FileUtil.toFile(projectDirectory).getAbsolutePath();
         SwingUtilities.invokeLater(new Runnable() {
 
             @Override
@@ -107,6 +108,7 @@ public final class GenerateGitIgnoreAction implements ActionListener {
                 GitignoreListPanel panel = GitignoreListPanel.getDefault();
                 panel.setEnabledOverwrite(isEnabled);
                 panel.setEnabledPostscript(isEnabled);
+                panel.setFilePath(projectDirectoryPath);
 
                 DialogDescriptor descriptor;
                 try {
@@ -118,6 +120,9 @@ public final class GenerateGitIgnoreAction implements ActionListener {
                             String warning = Bundle.GenerateGitignoreAction_select_gitignore_list_message();
                             showDialog(warning);
                             return;
+                        }
+                        if (!panel.getFilePath().equals(projectDirectoryPath)) {
+                            gitignoreFile = new File(new File(panel.getFilePath()), GITIGNORE_NAME);
                         }
 
                         // create file
@@ -167,8 +172,8 @@ public final class GenerateGitIgnoreAction implements ActionListener {
                 if (panel.isNormal() || panel.isOverwrite()) {
                     pw.print(gitignoreContent);
                 } else if (panel.isPostscript()) {
-                    // # Created by http://www.gitignore.io
-                    gitignoreContent = gitignoreContent.replace("# Created by http://www.gitignore.io\n", ""); // NOI18N
+                    // # Created by https://www.gitignore.io
+                    gitignoreContent = gitignoreContent.replace("# Created by https://www.gitignore.io\n", ""); // NOI18N
                     pw.write(gitignoreContent);
                 }
             } finally {

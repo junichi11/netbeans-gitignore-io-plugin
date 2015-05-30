@@ -8,11 +8,11 @@ Support for gitignore.io. This plugin generates .gitignore file to your project 
 
 ## What's gitignore.io?
 
-- http://gitignore.io
+- https://gitignore.io
 
 ## Requirements
 
-- NetBeans 7.3 or newer
+- NetBeans 8.0 or newer
 
 ## Usage
 
@@ -25,7 +25,7 @@ Support for gitignore.io. This plugin generates .gitignore file to your project 
 Warning dialog is shown with the following cases:
 
 - .gitignore already exists
-- Isn't connected to the internet
+- Isn't connected to an internet
 
 ## Issues
 
