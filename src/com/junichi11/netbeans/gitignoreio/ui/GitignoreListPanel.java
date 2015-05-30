@@ -45,6 +45,7 @@ import com.junichi11.netbeans.gitignoreio.options.GitignoreioOptions;
 import java.awt.Dialog;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
@@ -60,6 +61,9 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import org.openide.DialogDescriptor;
 import org.openide.DialogDisplayer;
+import org.openide.filesystems.FileChooserBuilder;
+import org.openide.filesystems.FileObject;
+import org.openide.filesystems.FileUtil;
 import org.openide.util.NbBundle;
 
 /**
@@ -72,6 +76,7 @@ public class GitignoreListPanel extends JPanel {
     private static final String GITIGNORE_API = "https://www.gitignore.io/api/"; // NOI18N
     private static final String GITIGNORE_API_LIST = GITIGNORE_API + "list"; // NOI18N
     private static final String UTF8 = "UTF-8"; // NOI18N
+    private static final String GITIGNORE_LAST_FOLDER_SUFFIX = ".gitignore"; // NOI18N
     private static List<String> GITIGNORES;
     private static final GitignoreListPanel INSTANCE = new GitignoreListPanel();
     private boolean isConnectedNetwork = true;
@@ -173,10 +178,24 @@ public class GitignoreListPanel extends JPanel {
 
     public void setEnabledOverwrite(boolean isEnabled) {
         overwriteRadioButton.setEnabled(isEnabled);
+        if (!isEnabled && isOverwrite()) {
+            normalRadioButton.setSelected(true);
+        }
     }
 
     public void setEnabledPostscript(boolean isEnabled) {
         postscriptRadioButton.setEnabled(isEnabled);
+        if (!isEnabled && isPostscript()) {
+            normalRadioButton.setSelected(true);
+        }
+    }
+
+    public String getFilePath() {
+        return filePathTextField.getText();
+    }
+
+    public void setFilePath(String filePath) {
+        filePathTextField.setText(filePath);
     }
 
     @NbBundle.Messages({
@@ -264,6 +283,8 @@ public class GitignoreListPanel extends JPanel {
         postscriptRadioButton = new javax.swing.JRadioButton();
         filterTextField = new javax.swing.JTextField();
         filterLabel = new javax.swing.JLabel();
+        browseButton = new javax.swing.JButton();
+        filePathTextField = new javax.swing.JTextField();
 
         org.openide.awt.Mnemonics.setLocalizedText(availableListLabel, org.openide.util.NbBundle.getMessage(GitignoreListPanel.class, "GitignoreListPanel.availableListLabel.text")); // NOI18N
 
@@ -316,6 +337,16 @@ public class GitignoreListPanel extends JPanel {
 
         org.openide.awt.Mnemonics.setLocalizedText(filterLabel, org.openide.util.NbBundle.getMessage(GitignoreListPanel.class, "GitignoreListPanel.filterLabel.text")); // NOI18N
 
+        org.openide.awt.Mnemonics.setLocalizedText(browseButton, org.openide.util.NbBundle.getMessage(GitignoreListPanel.class, "GitignoreListPanel.browseButton.text")); // NOI18N
+        browseButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                browseButtonActionPerformed(evt);
+            }
+        });
+
+        filePathTextField.setEditable(false);
+        filePathTextField.setText(org.openide.util.NbBundle.getMessage(GitignoreListPanel.class, "GitignoreListPanel.filePathTextField.text")); // NOI18N
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -343,7 +374,11 @@ public class GitignoreListPanel extends JPanel {
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(filterLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(filterTextField)))
+                        .addComponent(filterTextField))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(filePathTextField)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(browseButton)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -356,7 +391,7 @@ public class GitignoreListPanel extends JPanel {
                     .addComponent(loadDefaultButton)
                     .addComponent(resetButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(availableListScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 143, Short.MAX_VALUE)
+                .addComponent(availableListScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 109, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(filterTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -368,6 +403,10 @@ public class GitignoreListPanel extends JPanel {
                     .addComponent(normalRadioButton)
                     .addComponent(overwriteRadioButton)
                     .addComponent(postscriptRadioButton))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(browseButton)
+                    .addComponent(filePathTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -419,10 +458,31 @@ public class GitignoreListPanel extends JPanel {
     private void resetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetButtonActionPerformed
         setGitignores(""); // NOI18N
     }//GEN-LAST:event_resetButtonActionPerformed
+
+    @NbBundle.Messages({
+        "GitignoreListPanel.browseButton.title=Select a directory"
+    })
+    private void browseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_browseButtonActionPerformed
+        File file = new FileChooserBuilder(GitignoreListPanel.class.getName() + GITIGNORE_LAST_FOLDER_SUFFIX)
+                .setDirectoriesOnly(true)
+                .setTitle(Bundle.GitignoreListPanel_browseButton_title())
+                .showOpenDialog();
+        if (file != null && file.isDirectory()) {
+            filePathTextField.setText(file.getAbsolutePath());
+            FileObject targetDirectory = FileUtil.toFileObject(file);
+            FileObject gitignoreFile = targetDirectory.getFileObject(".gitignore"); // NOI18N
+            boolean exists = gitignoreFile != null;
+            setEnabledOverwrite(exists);
+            setEnabledPostscript(exists);
+        }
+    }//GEN-LAST:event_browseButtonActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JList<String> availableList;
     private javax.swing.JLabel availableListLabel;
     private javax.swing.JScrollPane availableListScrollPane;
+    private javax.swing.JButton browseButton;
+    private javax.swing.JTextField filePathTextField;
     private javax.swing.JLabel filterLabel;
     private javax.swing.JTextField filterTextField;
     private javax.swing.JTextField gitignoresTextField;
