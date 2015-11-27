@@ -54,6 +54,8 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -80,6 +82,7 @@ public class GitignoreListPanel extends JPanel {
     private static List<String> GITIGNORES;
     private static final GitignoreListPanel INSTANCE = new GitignoreListPanel();
     private boolean isConnectedNetwork = true;
+    private static final Logger LOGGER = Logger.getLogger(GitignoreListPanel.class.getName());
 
     /**
      * Creates new form GitignoreListPanel
@@ -200,7 +203,7 @@ public class GitignoreListPanel extends JPanel {
 
     @NbBundle.Messages({
         "GitignoreListPanel.dialog.title=gitignore.io available list",
-        "GitignoreListPanel.network.error=You have to connect to the internet."
+        "GitignoreListPanel.network.error=You have to connect to the Internet."
     })
     public DialogDescriptor showDialog() throws IOException {
         if (!isConnectedNetwork) {
@@ -234,8 +237,10 @@ public class GitignoreListPanel extends JPanel {
             list = getContent(openConnection, UTF8);
             isConnectedNetwork = true;
         } catch (MalformedURLException ex) {
+            LOGGER.log(Level.WARNING, ex.getMessage());
             isConnectedNetwork = false;
         } catch (IOException ex) {
+            LOGGER.log(Level.WARNING, ex.getMessage());
             isConnectedNetwork = false;
         }
         return list;
