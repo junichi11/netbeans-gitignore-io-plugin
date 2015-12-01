@@ -82,6 +82,7 @@ public class GitignoreListPanel extends JPanel {
     private static List<String> GITIGNORES;
     private static final GitignoreListPanel INSTANCE = new GitignoreListPanel();
     private boolean isConnectedNetwork = true;
+    private boolean initilized = false;
     private static final Logger LOGGER = Logger.getLogger(GitignoreListPanel.class.getName());
 
     /**
@@ -89,11 +90,14 @@ public class GitignoreListPanel extends JPanel {
      */
     public GitignoreListPanel() {
         initComponents();
-
-        init();
     }
 
     public static GitignoreListPanel getDefault() {
+        if (!INSTANCE.initilized) {
+            INSTANCE.init();
+            INSTANCE.initilized = true;
+        }
+
         // retry
         if (!INSTANCE.isConnectedNetwork) {
             INSTANCE.init();
