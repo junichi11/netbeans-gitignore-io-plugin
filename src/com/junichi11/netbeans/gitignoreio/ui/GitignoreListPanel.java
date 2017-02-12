@@ -56,6 +56,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.net.ssl.HttpsURLConnection;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -74,15 +75,16 @@ import org.openide.util.NbBundle;
  */
 public class GitignoreListPanel extends JPanel {
 
-    private static final long serialVersionUID = -5481811228115109055L;
+    private volatile boolean isConnectedNetwork = true;
+    private volatile boolean initilized = false;
+
     private static final String GITIGNORE_API = "https://www.gitignore.io/api/"; // NOI18N
     private static final String GITIGNORE_API_LIST = GITIGNORE_API + "list"; // NOI18N
     private static final String UTF8 = "UTF-8"; // NOI18N
     private static final String GITIGNORE_LAST_FOLDER_SUFFIX = ".gitignore"; // NOI18N
     private static List<String> GITIGNORES;
     private static final GitignoreListPanel INSTANCE = new GitignoreListPanel();
-    private boolean isConnectedNetwork = true;
-    private boolean initilized = false;
+    private static final long serialVersionUID = -5226048221599145625L;
     private static final Logger LOGGER = Logger.getLogger(GitignoreListPanel.class.getName());
 
     /**
@@ -157,10 +159,18 @@ public class GitignoreListPanel extends JPanel {
 
     public String getGitignoreContent() throws MalformedURLException, IOException {
         String gitignores = getGitignores();
-        String address = GITIGNORE_API + gitignores;
-        URL url = new URL(address);
-        URLConnection connection = url.openConnection();
+        String url = GITIGNORE_API + gitignores;
+        HttpsURLConnection connection = openUrlConnection(url);
         return getContent(connection, UTF8);
+    }
+
+    private HttpsURLConnection openUrlConnection(String url) throws IOException {
+        HttpsURLConnection connection = (HttpsURLConnection) new URL(url).openConnection();
+        connection.setRequestMethod("GET"); // NOI18N
+        connection.setRequestProperty("User-Agent", "NetBeans Plugin");
+        connection.setReadTimeout(2000);
+        connection.setConnectTimeout(2000);
+        return connection;
     }
 
     public String getGitignores() {
@@ -236,8 +246,7 @@ public class GitignoreListPanel extends JPanel {
     private String getAvailableGitignoresText() {
         String list = null;
         try {
-            URL url = new URL(GITIGNORE_API_LIST);
-            URLConnection openConnection = url.openConnection();
+            HttpsURLConnection openConnection = openUrlConnection(GITIGNORE_API_LIST);
             list = getContent(openConnection, UTF8);
             isConnectedNetwork = true;
         } catch (MalformedURLException ex) {
