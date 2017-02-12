@@ -108,7 +108,7 @@ public class GitignoreListPanel extends JPanel {
     }
 
     private void init() {
-        DefaultListModel<String> model = new DefaultListModel<String>();
+        DefaultListModel<String> model = new DefaultListModel<>();
         availableList.setModel(model);
         addGitignores(""); // NOI18N
         normalRadioButton.setSelected(true);
@@ -147,13 +147,13 @@ public class GitignoreListPanel extends JPanel {
 
         filter = filter.replaceAll("\\s+", " "); // NOI18N
         String[] filters = filter.split(" "); // NOI18N
-        for (String gitignore : getAvailableGitignores()) {
+        getAvailableGitignores().forEach((gitignore) -> {
             for (String f : filters) {
                 if (gitignore.contains(f)) {
                     model.addElement(gitignore);
                 }
             }
-        }
+        });
         availableList.setModel(model);
     }
 
@@ -232,7 +232,7 @@ public class GitignoreListPanel extends JPanel {
 
     private synchronized List<String> getAvailableGitignores() {
         if (GITIGNORES == null) {
-            GITIGNORES = new ArrayList<String>();
+            GITIGNORES = new ArrayList<>();
             String gitignoreList = getAvailableGitignoresText();
             if (gitignoreList != null) {
                 String[] gitignores = splitGitignores(gitignoreList);

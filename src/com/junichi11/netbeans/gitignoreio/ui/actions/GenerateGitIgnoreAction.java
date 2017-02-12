@@ -101,51 +101,47 @@ public final class GenerateGitIgnoreAction implements ActionListener {
         gitignoreFile = new File(FileUtil.toFile(projectDirectory), GITIGNORE_NAME);
         final boolean isEnabled = gitignoreFile.exists();
         final String projectDirectoryPath = FileUtil.toFile(projectDirectory).getAbsolutePath();
-        SwingUtilities.invokeLater(new Runnable() {
-
-            @Override
-            public void run() {
-                GitignoreListPanel panel = GitignoreListPanel.getDefault();
-                panel.setEnabledOverwrite(isEnabled);
-                panel.setEnabledPostscript(isEnabled);
-                panel.setFilePath(projectDirectoryPath);
-
-                DialogDescriptor descriptor;
-                try {
-                    descriptor = panel.showDialog();
-                    if (descriptor.getValue() == DialogDescriptor.OK_OPTION) {
-                        // get content
-                        String gitignoreContent = panel.getGitignoreContent();
-                        if (gitignoreContent == null) {
-                            String warning = Bundle.GenerateGitignoreAction_select_gitignore_list_message();
-                            showDialog(warning);
-                            return;
-                        }
-                        if (!panel.getFilePath().equals(projectDirectoryPath)) {
-                            gitignoreFile = new File(new File(panel.getFilePath()), GITIGNORE_NAME);
-                        }
-
-                        // create file
-                        if (!createFile() && panel.isNormal()) {
-                            // show dialog
-                            String error = Bundle.GenerateGitignoreAction_new_file_error_message();
-                            showDialog(error);
-                        } else {
-                            // write
-                            writeFile(panel, gitignoreContent);
-                        }
-
-                        // open file
-                        FileObject gitignore = FileUtil.toFileObject(gitignoreFile);
-                        if (gitignore != null) {
-                            UiUtils.open(gitignore, 0);
-                        }
+        SwingUtilities.invokeLater(() -> {
+            GitignoreListPanel panel = GitignoreListPanel.getDefault();
+            panel.setEnabledOverwrite(isEnabled);
+            panel.setEnabledPostscript(isEnabled);
+            panel.setFilePath(projectDirectoryPath);
+            
+            DialogDescriptor descriptor;
+            try {
+                descriptor = panel.showDialog();
+                if (descriptor.getValue() == DialogDescriptor.OK_OPTION) {
+                    // get content
+                    String gitignoreContent = panel.getGitignoreContent();
+                    if (gitignoreContent == null) {
+                        String warning = Bundle.GenerateGitignoreAction_select_gitignore_list_message();
+                        showDialog(warning);
+                        return;
                     }
-                } catch (MalformedURLException ex) {
-                    Exceptions.printStackTrace(ex);
-                } catch (IOException ex) {
-                    showDialog(ex.getMessage());
+                    if (!panel.getFilePath().equals(projectDirectoryPath)) {
+                        gitignoreFile = new File(new File(panel.getFilePath()), GITIGNORE_NAME);
+                    }
+                    
+                    // create file
+                    if (!createFile() && panel.isNormal()) {
+                        // show dialog
+                        String error = Bundle.GenerateGitignoreAction_new_file_error_message();
+                        showDialog(error);
+                    } else {
+                        // write
+                        writeFile(panel, gitignoreContent);
+                    }
+                    
+                    // open file
+                    FileObject gitignore = FileUtil.toFileObject(gitignoreFile);
+                    if (gitignore != null) {
+                        UiUtils.open(gitignore, 0);
+                    }
                 }
+            } catch (MalformedURLException ex) {
+                Exceptions.printStackTrace(ex);
+            } catch (IOException ex) {
+                showDialog(ex.getMessage());
             }
         });
     }
@@ -189,13 +185,9 @@ public final class GenerateGitIgnoreAction implements ActionListener {
     }
 
     private void showDialog(final String error) {
-        SwingUtilities.invokeLater(new Runnable() {
-
-            @Override
-            public void run() {
-                NotifyDescriptor.Message message = new NotifyDescriptor.Message(error, NotifyDescriptor.WARNING_MESSAGE);
-                DialogDisplayer.getDefault().notify(message);
-            }
+        SwingUtilities.invokeLater(() -> {
+            NotifyDescriptor.Message message = new NotifyDescriptor.Message(error, NotifyDescriptor.WARNING_MESSAGE);
+            DialogDisplayer.getDefault().notify(message);
         });
     }
 }
