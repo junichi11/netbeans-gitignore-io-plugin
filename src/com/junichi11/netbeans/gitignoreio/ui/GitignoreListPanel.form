@@ -23,37 +23,49 @@
           <Group type="102" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="availableListScrollPane" pref="476" max="32767" attributes="0"/>
-                  <Group type="102" attributes="0">
-                      <Component id="availableListLabel" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="32767" attributes="0"/>
-                      <Component id="resetButton" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="loadDefaultButton" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="saveAsDefaultButton" min="-2" max="-2" attributes="0"/>
-                  </Group>
-                  <Component id="gitignoresTextField" max="32767" attributes="0"/>
-                  <Group type="102" attributes="0">
-                      <Component id="normalRadioButton" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="overwriteRadioButton" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="postscriptRadioButton" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
-                  </Group>
-                  <Group type="102" alignment="0" attributes="0">
-                      <Component id="filterLabel" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="filterTextField" max="32767" attributes="0"/>
-                  </Group>
-                  <Group type="102" alignment="1" attributes="0">
-                      <Component id="filePathTextField" max="32767" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="browseButton" min="-2" max="-2" attributes="0"/>
-                  </Group>
+                  <Component id="messageLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                  <Component id="availableListLabel" alignment="0" min="-2" max="-2" attributes="0"/>
               </Group>
+              <EmptySpace max="32767" attributes="0"/>
+              <Component id="resetButton" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
+              <Component id="loadDefaultButton" min="-2" max="-2" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
+              <Component id="saveAsDefaultButton" min="-2" max="-2" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
+          </Group>
+          <Group type="102" attributes="0">
+              <EmptySpace min="12" pref="12" max="-2" attributes="0"/>
+              <Component id="normalRadioButton" min="-2" max="-2" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
+              <Component id="overwriteRadioButton" min="-2" max="-2" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
+              <Component id="postscriptRadioButton" min="-2" max="-2" attributes="0"/>
+              <EmptySpace min="146" max="32767" attributes="0"/>
+          </Group>
+          <Group type="102" alignment="1" attributes="0">
+              <EmptySpace max="-2" attributes="0"/>
+              <Component id="filePathTextField" max="32767" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
+              <Component id="browseButton" min="-2" max="-2" attributes="0"/>
+              <EmptySpace min="12" pref="12" max="-2" attributes="0"/>
+          </Group>
+          <Group type="102" alignment="0" attributes="0">
+              <EmptySpace min="12" pref="12" max="-2" attributes="0"/>
+              <Component id="filterLabel" min="-2" max="-2" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
+              <Component id="filterTextField" max="32767" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
+          </Group>
+          <Group type="102" attributes="0">
+              <EmptySpace min="12" pref="12" max="-2" attributes="0"/>
+              <Component id="gitignoresTextField" max="32767" attributes="0"/>
+              <EmptySpace min="12" pref="12" max="-2" attributes="0"/>
+          </Group>
+          <Group type="102" attributes="0">
+              <EmptySpace min="12" pref="12" max="-2" attributes="0"/>
+              <Component id="availableListScrollPane" max="32767" attributes="0"/>
+              <EmptySpace min="12" pref="12" max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -68,7 +80,9 @@
                   <Component id="resetButton" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="availableListScrollPane" pref="109" max="32767" attributes="0"/>
+              <Component id="messageLabel" min="-2" max="-2" attributes="0"/>
+              <EmptySpace min="-2" max="-2" attributes="0"/>
+              <Component id="availableListScrollPane" pref="98" max="32767" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="filterTextField" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -87,7 +101,7 @@
                   <Component id="browseButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="filePathTextField" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
-              <EmptySpace max="-2" attributes="0"/>
+              <EmptySpace min="-2" max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -220,6 +234,13 @@
         <Property name="editable" type="boolean" value="false"/>
         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
           <ResourceString bundle="com/junichi11/netbeans/gitignoreio/ui/Bundle.properties" key="GitignoreListPanel.filePathTextField.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+        </Property>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="messageLabel">
+      <Properties>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+          <ResourceString bundle="com/junichi11/netbeans/gitignoreio/ui/Bundle.properties" key="GitignoreListPanel.messageLabel.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
         </Property>
       </Properties>
     </Component>

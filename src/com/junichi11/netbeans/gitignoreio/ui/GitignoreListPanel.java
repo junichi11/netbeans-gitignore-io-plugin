@@ -56,9 +56,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.net.ssl.HttpsURLConnection;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import org.openide.DialogDescriptor;
@@ -67,6 +69,7 @@ import org.openide.filesystems.FileChooserBuilder;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.util.NbBundle;
+import org.openide.util.RequestProcessor;
 
 /**
  *
@@ -74,16 +77,20 @@ import org.openide.util.NbBundle;
  */
 public class GitignoreListPanel extends JPanel {
 
-    private static final long serialVersionUID = -5481811228115109055L;
+    private volatile boolean isConnectedNetwork = true;
+    private volatile boolean initilized = false;
+
     private static final String GITIGNORE_API = "https://www.gitignore.io/api/"; // NOI18N
     private static final String GITIGNORE_API_LIST = GITIGNORE_API + "list"; // NOI18N
+    private static final String FORMAT_LINES = "lines"; // NOI18N
+    private static final String FORMAT_JSON = "json"; // NOI18N
     private static final String UTF8 = "UTF-8"; // NOI18N
     private static final String GITIGNORE_LAST_FOLDER_SUFFIX = ".gitignore"; // NOI18N
     private static List<String> GITIGNORES;
     private static final GitignoreListPanel INSTANCE = new GitignoreListPanel();
-    private boolean isConnectedNetwork = true;
-    private boolean initilized = false;
+    private static final long serialVersionUID = -5226048221599145625L;
     private static final Logger LOGGER = Logger.getLogger(GitignoreListPanel.class.getName());
+    private static final RequestProcessor RP = new RequestProcessor(GitignoreListPanel.class);
 
     /**
      * Creates new form GitignoreListPanel
@@ -106,7 +113,8 @@ public class GitignoreListPanel extends JPanel {
     }
 
     private void init() {
-        DefaultListModel<String> model = new DefaultListModel<String>();
+        setMessage(""); // NOI18N
+        DefaultListModel<String> model = new DefaultListModel<>();
         availableList.setModel(model);
         addGitignores(""); // NOI18N
         normalRadioButton.setSelected(true);
@@ -145,22 +153,33 @@ public class GitignoreListPanel extends JPanel {
 
         filter = filter.replaceAll("\\s+", " "); // NOI18N
         String[] filters = filter.split(" "); // NOI18N
-        for (String gitignore : getAvailableGitignores()) {
-            for (String f : filters) {
-                if (gitignore.contains(f)) {
-                    model.addElement(gitignore);
+        List<String> availableGitignores = getAvailableGitignores();
+        if (availableGitignores != null) {
+            availableGitignores.forEach((gitignore) -> {
+                for (String f : filters) {
+                    if (gitignore.contains(f)) {
+                        model.addElement(gitignore);
+                    }
                 }
-            }
+            });
+            availableList.setModel(model);
         }
-        availableList.setModel(model);
     }
 
     public String getGitignoreContent() throws MalformedURLException, IOException {
         String gitignores = getGitignores();
-        String address = GITIGNORE_API + gitignores;
-        URL url = new URL(address);
-        URLConnection connection = url.openConnection();
+        String url = GITIGNORE_API + gitignores;
+        HttpsURLConnection connection = openUrlConnection(url);
         return getContent(connection, UTF8);
+    }
+
+    private HttpsURLConnection openUrlConnection(String url) throws IOException {
+        HttpsURLConnection connection = (HttpsURLConnection) new URL(url).openConnection();
+        connection.setRequestMethod("GET"); // NOI18N
+        connection.setRequestProperty("User-Agent", "NetBeans Plugin");
+        connection.setReadTimeout(2000);
+        connection.setConnectTimeout(2000);
+        return connection;
     }
 
     public String getGitignores() {
@@ -205,6 +224,10 @@ public class GitignoreListPanel extends JPanel {
         filePathTextField.setText(filePath);
     }
 
+    private void setMessage(String message) {
+        messageLabel.setText(message);
+    }
+
     @NbBundle.Messages({
         "GitignoreListPanel.dialog.title=gitignore.io available list",
         "GitignoreListPanel.network.error=You have to connect to the Internet."
@@ -220,24 +243,37 @@ public class GitignoreListPanel extends JPanel {
         return descriptor;
     }
 
+    @NbBundle.Messages({
+        "GitignoreListPanel.message.getting=Getting the available list...",
+    })
     private synchronized List<String> getAvailableGitignores() {
         if (GITIGNORES == null) {
-            GITIGNORES = new ArrayList<String>();
-            String gitignoreList = getAvailableGitignoresText();
-            if (gitignoreList != null) {
-                String[] gitignores = splitGitignores(gitignoreList);
-                Arrays.sort(gitignores);
-                GITIGNORES.addAll(Arrays.asList(gitignores));
-            }
+            setMessage(Bundle.GitignoreListPanel_message_getting());
+            RP.post(() -> {
+                GITIGNORES = new ArrayList<>();
+                String gitignoreList = getAvailableGitignoresText();
+                if (gitignoreList != null) {
+                    String[] gitignores = splitGitignores(gitignoreList);
+                    Arrays.sort(gitignores);
+                    GITIGNORES.addAll(Arrays.asList(gitignores));
+                    SwingUtilities.invokeLater(() -> {
+                        addGitignores(""); // NOI18N
+                        setMessage(""); // NOI18N
+                    });
+                }
+            });
         }
         return GITIGNORES;
     }
 
+    @NbBundle.Messages({
+        "GitignoreListPanel.message.connection.error=Connection error",
+    })
     private String getAvailableGitignoresText() {
         String list = null;
         try {
-            URL url = new URL(GITIGNORE_API_LIST);
-            URLConnection openConnection = url.openConnection();
+            // #5 now use the "lines" format option
+            HttpsURLConnection openConnection = openUrlConnection(getApiListURL(FORMAT_LINES));
             list = getContent(openConnection, UTF8);
             isConnectedNetwork = true;
         } catch (MalformedURLException ex) {
@@ -245,9 +281,19 @@ public class GitignoreListPanel extends JPanel {
             isConnectedNetwork = false;
         } catch (IOException ex) {
             LOGGER.log(Level.WARNING, ex.getMessage());
+            setMessage(Bundle.GitignoreListPanel_message_connection_error());
             isConnectedNetwork = false;
         }
         return list;
+    }
+
+    private String getApiListURL(String format) {
+        String formatParam = String.format("format=%s", format); // NOI18N
+        StringBuilder sb = new StringBuilder();
+        sb.append(GITIGNORE_API_LIST);
+        sb.append("?"); // NOI18N
+        sb.append(formatParam);
+        return sb.toString();
     }
 
     private String getContent(URLConnection connection, String charset) throws IOException {
@@ -263,7 +309,8 @@ public class GitignoreListPanel extends JPanel {
     }
 
     private String[] splitGitignores(String gitignores) {
-        return gitignores.split(","); // NOI18N
+        // #5 new use the "lines" format option
+        return gitignores.split("\n"); // NOI18N
     }
 
     private GitignoreioOptions getOptions() {
@@ -282,7 +329,7 @@ public class GitignoreListPanel extends JPanel {
         writeOptionButtonGroup = new javax.swing.ButtonGroup();
         availableListLabel = new javax.swing.JLabel();
         availableListScrollPane = new javax.swing.JScrollPane();
-        availableList = new javax.swing.JList<String>();
+        availableList = new javax.swing.JList<>();
         gitignoresTextField = new javax.swing.JTextField();
         saveAsDefaultButton = new javax.swing.JButton();
         loadDefaultButton = new javax.swing.JButton();
@@ -294,6 +341,7 @@ public class GitignoreListPanel extends JPanel {
         filterLabel = new javax.swing.JLabel();
         browseButton = new javax.swing.JButton();
         filePathTextField = new javax.swing.JTextField();
+        messageLabel = new javax.swing.JLabel();
 
         org.openide.awt.Mnemonics.setLocalizedText(availableListLabel, org.openide.util.NbBundle.getMessage(GitignoreListPanel.class, "GitignoreListPanel.availableListLabel.text")); // NOI18N
 
@@ -356,6 +404,8 @@ public class GitignoreListPanel extends JPanel {
         filePathTextField.setEditable(false);
         filePathTextField.setText(org.openide.util.NbBundle.getMessage(GitignoreListPanel.class, "GitignoreListPanel.filePathTextField.text")); // NOI18N
 
+        org.openide.awt.Mnemonics.setLocalizedText(messageLabel, org.openide.util.NbBundle.getMessage(GitignoreListPanel.class, "GitignoreListPanel.messageLabel.text")); // NOI18N
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -363,32 +413,43 @@ public class GitignoreListPanel extends JPanel {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(availableListScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 476, Short.MAX_VALUE)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(availableListLabel)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(resetButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(loadDefaultButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(saveAsDefaultButton))
-                    .addComponent(gitignoresTextField)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(normalRadioButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(overwriteRadioButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(postscriptRadioButton)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(filterLabel)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(filterTextField))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(filePathTextField)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(browseButton)))
+                    .addComponent(messageLabel)
+                    .addComponent(availableListLabel))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(resetButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(loadDefaultButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(saveAsDefaultButton)
                 .addContainerGap())
+            .addGroup(layout.createSequentialGroup()
+                .addGap(12, 12, 12)
+                .addComponent(normalRadioButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(overwriteRadioButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(postscriptRadioButton)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(filePathTextField)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(browseButton)
+                .addGap(12, 12, 12))
+            .addGroup(layout.createSequentialGroup()
+                .addGap(12, 12, 12)
+                .addComponent(filterLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(filterTextField)
+                .addContainerGap())
+            .addGroup(layout.createSequentialGroup()
+                .addGap(12, 12, 12)
+                .addComponent(gitignoresTextField)
+                .addGap(12, 12, 12))
+            .addGroup(layout.createSequentialGroup()
+                .addGap(12, 12, 12)
+                .addComponent(availableListScrollPane)
+                .addGap(12, 12, 12))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -400,7 +461,9 @@ public class GitignoreListPanel extends JPanel {
                     .addComponent(loadDefaultButton)
                     .addComponent(resetButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(availableListScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 109, Short.MAX_VALUE)
+                .addComponent(messageLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(availableListScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 98, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(filterTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -496,6 +559,7 @@ public class GitignoreListPanel extends JPanel {
     private javax.swing.JTextField filterTextField;
     private javax.swing.JTextField gitignoresTextField;
     private javax.swing.JButton loadDefaultButton;
+    private javax.swing.JLabel messageLabel;
     private javax.swing.JRadioButton normalRadioButton;
     private javax.swing.JRadioButton overwriteRadioButton;
     private javax.swing.JRadioButton postscriptRadioButton;
